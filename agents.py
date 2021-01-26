@@ -50,6 +50,9 @@ class player:
     def avgScore(self):   # return the average score
         return self.getScore() / self.getGames()
     
+    def changeStrat(self, strategy):   # change the strategy of the player
+        self.strat = strategy
+    
     def game(self, choice, opp):   # simulate a game
        
         if choice == "R":
