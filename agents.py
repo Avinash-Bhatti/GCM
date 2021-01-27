@@ -80,7 +80,7 @@ class player:
                 self.draw()
             
     
-    def play(self):   # play the game with all 8 neighbours
+    def playRound(self):   # play the game with all 8 neighbours
         
         options = ["R", "P", "S"]
         # all 8 opponents given a random choice
@@ -218,6 +218,11 @@ class player:
                  
                 
         self.rounds += 1   # increment counter for number of rounds
+        
+    def play(self, numOfRounds=1):   # play multiple rounds
+        
+        for i in range(numOfRounds):
+            self.playRound()
             
         
     
