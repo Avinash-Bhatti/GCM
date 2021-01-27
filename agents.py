@@ -218,11 +218,13 @@ class player:
                  
                 
         self.rounds += 1   # increment counter for number of rounds
-        
+
+
     def play(self, numOfRounds=1):   # play multiple rounds
         
         for i in range(numOfRounds):
             self.playRound()
             
         
+    
     
