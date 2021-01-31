@@ -58,7 +58,10 @@ class Player:
         #       and n columns, where the rows denote sets of games against a
         #       single player, so row 0 = vs R, row 1 = vs DR, etc...
         
+        
+        
         # Variables to store last move chosen by player
+
         self.prev_move = ','
         self.prev_res = ','
     
