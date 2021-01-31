@@ -1,63 +1,82 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import random as rnd
+import matplotlib.pyplot as plt
 
-#Set random seeds so that any randomness is reproducible
-
+# Set random seeds so that any randomness is reproducible
 rnd.seed(0)
 np.random.seed(0)
 
 key = ["R", "P", "S"]
-strats = ["always_rock", "always_scissors", "always_paper", "human", "anti-human"]
-#Define general function to play RPS from the perspective of player 1
+strats = ["always_rock", "always_scissors", "always_paper", "human", 
+          "anti-human"]
+
+# Define function to play RPS from the perspective of player 1
+# Returns 'result for player 1', 'result for player 2'
 def RPS(move_p1, move_p2):
+    
     ind1 = key.index(move_p1)
     ind2 = key.index(move_p2)
+    
     if ind1 == ind2:
         return 'D', 'D'
+    
     elif ind1 == (ind2 + 1) or ind1 == (ind2 - 2):
         return 'W', 'L'
+    
     else:
         return 'L', 'W'
-#RPS is kinda cyclical, might be an even nicer/shorter implementation using levi cevita
 
 
-#Class to create a new player
+# Class to create a new player
 class Player:
-    #strategy contains a string which will define the type of strat used
-    #n is the number of games per plaeer
-    def __init__(self, strategy, n, location=[0, 0]):
-        self.strat = strategy   # strategy for player
-        self.loc = location   # location# y location
-        #self.score = 0   # score of player
-        # lists to store players previous results
-        #Note we play games starting from R, and proceeding clockwise
-        #i.e. R, DR, D, DL, L, UL, U, UR, 
+    
+    '''
+    Initialise a player with a strategy, location, and number of games per
+    clock tick
+    e.g. player1 = Player("strategy", [x, y], n)
+    
+    Strategy should be a string which will define the type of strategy used
+    picked from the following strategies ["always_rock", "always_scissors",
+    "always_paper", "human", "anti-human"]
+    
+    Location will be a list of two elements consisting of x and y coordinates
+    
+    n is the number of games played per clock tick
+    '''
+    
+    def __init__(self, strategy, location=[0, 0], n=1):
+        self.strat = strategy   # strategy of player
+        self.loc = location   # location of player
+        
+        # lists to store players previous results and moves
+        # Note: we play games starting from R, and proceeding clockwise
+        #       i.e. R, DR, D, DL, L, UL, U, UR, 
         self.results = np.empty((8,n), dtype='str')
         self.moves = np.empty((8,n), dtype='str')
         
-        #note we store the results and moves played in arrays, with 8 rows, and n columns,
-        #where the rows denote sets of games against a single player, so row 1 = vs player 2
-        #row 2 = vs player 3, etc...
+        # Note: we store the results and moves played in arrays, with 8 rows,
+        #       and n columns, where the rows denote sets of games against a
+        #       single player, so row 0 = vs R, row 1 = vs DR, etc...
         
+        # Variables to store last move chosen by player
         self.prev_move = ','
         self.prev_res = ','
-        
-        #Define variables to store the last move thrown by a player, for use in memory based strategies
-        #this can be gener
-    
-
     
     
-    #the function that decides on what move to play, in general will look at the strategy of the player
-    #and which opponent it is playing, and its previous moves and results in the current set of play
+    # Function that decides on what move to play
+    # Will look at the strategy of the player and which opponent its playing,
+    # and its previous moves and results in the current set of play
     def choose_move(self, i, p):
+        
         if self.strat == "always_rock":
             return "R"
+        
         elif self.strat == "always_paper":
             return "P"
+        
         elif self.strat == "always_scissors":
             return "S"
+        
         elif self.strat == "human":
             if p == 0:
                 return rnd.choice(key)
@@ -70,6 +89,7 @@ class Player:
                 else:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
+                
         elif self.strat == "anti-human":
             if p == 0:
                 return rnd.choice(key)
