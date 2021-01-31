@@ -51,25 +51,23 @@ class Player:
         # lists to store players previous results and moves
         # Note: we play games starting from R, and proceeding clockwise
         #       i.e. R, DR, D, DL, L, UL, U, UR, 
-        self.results = np.empty((8,n), dtype='str')
-        self.moves = np.empty((8,n), dtype='str')
-        
         # Note: we store the results and moves played in arrays, with 8 rows,
         #       and n columns, where the rows denote sets of games against a
         #       single player, so row 0 = vs R, row 1 = vs DR, etc...
-        
-        
+        self.results = np.empty((8,n), dtype='str')
+        self.moves = np.empty((8,n), dtype='str')
         
         # Variables to store last move chosen by player
-
         self.prev_move = ','
         self.prev_res = ','
+        # we don't need a variable for this? can just index [-1]???
     
     
     # Function that decides on what move to play
     # Will look at the strategy of the player and which opponent its playing,
     # and its previous moves and results in the current set of play
     def choose_move(self, i, p):
+        # why is there variable i???
         
         if self.strat == "always_rock":
             return "R"
@@ -80,7 +78,7 @@ class Player:
         elif self.strat == "always_scissors":
             return "S"
         
-        elif self.strat == "human":
+        elif self.strat == "human": # what exactly is human?
             if p == 0:
                 return rnd.choice(key)
             else:
@@ -93,7 +91,7 @@ class Player:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
                 
-        elif self.strat == "anti-human":
+        elif self.strat == "anti-human": # what exactly is anti-human?
             if p == 0:
                 return rnd.choice(key)
             else:
