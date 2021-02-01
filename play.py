@@ -69,7 +69,7 @@ class Player:
     # Function that decides on what move to play
     # Will look at the strategy of the player and which opponent its playing,
     # and its previous moves and results in the current set of play
-    def choose_move(self, i, p):
+    def choose_move(self, p):
         
         if self.strat == "always_rock":
             return "R"
@@ -115,8 +115,8 @@ class Player:
     def play(self, player2, i, n):   # play N games
         
         for p in range(0, n):
-            p1_move = self.choose_move(i, p)
-            p2_move = player2.choose_move(i, p)
+            p1_move = self.choose_move(p)
+            p2_move = player2.choose_move(p)
             res = RPS(p1_move, p2_move)
             self.results[i, p] = res[0]
             self.moves[i, p] = p1_move
@@ -142,7 +142,7 @@ class Simulation:
             #Append rows one at a time
             row = np.array([])
             for j in range(N):
-                row = np.append(row, Player(rnd.choice(strats),n, [i, j]))
+                row = np.append(row, Player(rnd.choice(strats), [i, j], n))
             row = row.reshape(1, N)
             self.grid = np.append(self.grid, row, axis=0)
             
