@@ -174,8 +174,18 @@ class Simulation:
         for i in range(self.N):
             for j in range(self.N):
                 player = self.grid[i][j]   # cycle through all players
-                pl = player.loc
                 
+                player.play(self.grid[(i+1)%self.N][j], 0, self.n)
+                player.play(self.grid[(i+1)%self.N][(j-1)%self.N], 1, self.n)
+                player.play(self.grid[i][(j-1)%self.N], 2, self.n)
+                player.play(self.grid[(i-1)%self.N][(j-1)%self.N], 3, self.n)
+                player.play(self.grid[(i-1)%self.N][j], 4, self.n)
+                player.play(self.grid[(i-1)%self.N][(j+1)%self.N], 5, self.n)
+                player.play(self.grid[i][(j+1)%self.N], 6, self.n)
+                player.play(self.grid[(i+1)%self.N][(j+1)%self.N], 7, self.n)
+                
+                
+                '''
                 # no boundary conditions (middle players)
                 if pl[0] != 0 and pl[0] != self.N-1 \
                                     and pl[1] != 0 and pl[1] != self.N-1:
@@ -275,7 +285,7 @@ class Simulation:
                     player.play(self.grid[self.N-2][j+1], 5, self.n)
                     player.play(self.grid[self.N-1][j+1], 6, self.n)
                     player.play(self.grid[0][j+1], 7, self.n)
-                        
+                '''
         
 sim = Simulation(5, 10)
 sim.clock_tick()
