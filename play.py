@@ -146,7 +146,7 @@ class Player:
 class Simulation:
     
     '''
-    Class to initialise a NxN grid of players, playing n games per clock tick
+    Class to initialise a grid of NxN players, playing n games per clock tick
     '''
     
     def __init__(self, N, n):
@@ -155,6 +155,7 @@ class Simulation:
         self.N = N
         self.n = n
         
+        # Create N-1 x N-1 grid of Player objects
         for i in range(N):
             row = []
             for j in range(N):
@@ -167,13 +168,12 @@ class Simulation:
     def clock_tick(self):
         
         '''
-        Function to play a round of n games vs nearest 8 nieghbours for
-        argument 'player1'
+        Function to play a round of n games vs nearest 8 neighbours
         '''
         
         for i in range(self.N):
             for j in range(self.N):
-                player = self.grid[i][j]
+                player = self.grid[i][j]   # cycle through all players
                 pl = player.loc
                 
                 # no boundary conditions (middle players)
