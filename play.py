@@ -1,18 +1,22 @@
 import numpy as np
 import random as rnd
-import matplotlib.pyplot as plt
 
 # Set random seeds so that any randomness is reproducible
 rnd.seed(0)
 np.random.seed(0)
 
+
 key = ["R", "P", "S"]
 strats = ["always_rock", "always_scissors", "always_paper", "human", 
           "anti-human"]
 
-# Define function to play RPS from the perspective of player 1
-# Returns 'result for player 1', 'result for player 2'
+
 def RPS(move_p1, move_p2):
+    
+    '''
+    A function to play RPS from the persepctive of player 1.
+    Returns 'result for player 1', 'result for player 2'
+    '''
     
     ind1 = key.index(move_p1)
     ind2 = key.index(move_p2)
@@ -44,7 +48,7 @@ class Player:
     n is the number of games played per clock tick
     '''
     
-    def __init__(self, strategy, location=[0, 0], n=1):
+    def __init__(self, strategy, location, n):
         self.strat = strategy   # strategy of player
         self.loc = location   # location of player
         
@@ -54,20 +58,27 @@ class Player:
         # Note: we store the results and moves played in arrays, with 8 rows,
         #       and n columns, where the rows denote sets of games against a
         #       single player, so row 0 = vs R, row 1 = vs DR, etc...
-        self.results = np.empty((8,n), dtype='str')
-        self.moves = np.empty((8,n), dtype='str')
+        self.results = np.empty((8, n), dtype='str')
+        self.moves = np.empty((8, n), dtype='str')
         
         # Variables to store last move chosen by player
-        self.prev_move = ','
-        self.prev_res = ','
+        self.prev_move = ''
+        self.prev_res = ''
         # we don't need a variable for this? can just index [-1]???
     
     
-    # Function that decides on what move to play
-    # Will look at the strategy of the player and which opponent its playing,
-    # and its previous moves and results in the current set of play
-    def choose_move(self, i, p):
-        # why is there variable i???
+
+    def choose_move(self, p):
+        
+        '''
+        Function that decides on what move to play.
+        
+        Will look at the strategy of the player and which opponent it is
+        playing, as well as its previous moves and results.
+        
+        Argument 'p' represents how many games have been played in the clock
+        tick.
+        '''
         
         if self.strat == "always_rock":
             return "R"
@@ -78,7 +89,7 @@ class Player:
         elif self.strat == "always_scissors":
             return "S"
         
-        elif self.strat == "human": # what exactly is human?
+        elif self.strat == "human":
             if p == 0:
                 return rnd.choice(key)
             else:
@@ -91,7 +102,7 @@ class Player:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
                 
-        elif self.strat == "anti-human": # what exactly is anti-human?
+        elif self.strat == "anti-human":
             if p == 0:
                 return rnd.choice(key)
             else:
@@ -104,71 +115,171 @@ class Player:
                 else:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
-        
-        
-    #Define a function which acts on the player itself, and takes an opposition player object as an input
-    #we also need to know which game this is for player 1, ith game, so that we can calculate which
-    #game this will be for player 2
-    #(i.e. the game verus the player below me will be my 3rd set of matches, but it will be his 7th set of matches)
+                
+
     def play(self, player2, i, n):   # play N games
         
-        for p in range(0, n):
-            p1_move = self.choose_move(i, p)
-            p2_move = player2.choose_move(i, p)
+        '''
+        Function which simulates 'games' between self and 'player2'
+
+        Argument 'i' represents what relative player is being played moving in
+        a clockwise direction starting with "R". Where 'i' = 0 represents
+        the player on the right of self.
+        '''
+        
+        for p in range(n):
+            p1_move = self.choose_move(p)
+            p2_move = player2.choose_move(p)
             res = RPS(p1_move, p2_move)
+            
+            # update tuples of results and moves
             self.results[i, p] = res[0]
             self.moves[i, p] = p1_move
-            #note, we only update the results array for the player playing the game
-            #the previous move variable is a temporary variable for memory based strats
+            
+            # update temporary variables for results and moves 
             self.prev_move = p1_move
             self.prev_res = res[0]
-            #note, player 2 also needs to remember its last move for when it chooses its move
             player2.prev_move = p2_move
             player2.prev_res = res[1]
             
-            
-            
 
 class Simulation:
-    #initialise an NxN grid of players, with n games per clock tick
+    
+    '''
+    Class to initialise a NxN grid of players, playing n games per clock tick
+    '''
+    
     def __init__(self, N, n):
-        self.grid = np.array([]).reshape((0,N))
+        
+        self.grid = []
         self.N = N
         self.n = n
         
         for i in range(N):
-            #Append rows one at a time
-            row = np.array([])
+            row = []
             for j in range(N):
-                row = np.append(row, Player(rnd.choice(strats),n, [i, j]))
-            row = row.reshape(1, N)
-            self.grid = np.append(self.grid, row, axis=0)
+                row.append(Player(rnd.choice(strats), [i, j], n))
+            self.grid.append(row)
             
-            
-    
-    #Define a function to play a round of n games versus a players nearest 8 neighbours
-    def play_round(self, player1):
-        pl = player1.loc
-        for i in range(0, 8):
-            #I've implemented this using a rounded trig, so we circularly rotate around
-            p2_loc = pl + [round(np.sin(-45*i)), round(np.cos(-45*i))]
-            player2 = self.grid[p2_loc[0]%self.N, p2_loc[1]%self.N]
-            player1.play(player2, i, self.n)
-            
-    def clock_tick(self):
-        #Compute a global clock tick
-        for i in self.grid:
-            for j in i:
-                self.play_round(j)
-                
+        self.grid = np.array(self.grid)
         
+
+    def clock_tick(self):
+        
+        '''
+        Function to play a round of n games vs nearest 8 nieghbours for
+        argument 'player1'
+        '''
+        
+        for i in range(self.N):
+            for j in range(self.N):
+                player = self.grid[i][j]
+                pl = player.loc
                 
-    
-            
-sim = Simulation(3, 3)
+                # no boundary conditions (middle players)
+                if pl[0] != 0 and pl[0] != self.N-1 \
+                                    and pl[1] != 0 and pl[1] != self.N-1:
+                    player.play(self.grid[i+1][j], 0, self.n)
+                    player.play(self.grid[i+1][j-1], 1, self.n)
+                    player.play(self.grid[i][j-1], 2, self.n)
+                    player.play(self.grid[i-1][j-1], 3, self.n)
+                    player.play(self.grid[i-1][j], 4, self.n)
+                    player.play(self.grid[i-1][j+1], 5, self.n)
+                    player.play(self.grid[i][j+1], 6, self.n)
+                    player.play(self.grid[i+1][j+1], 7, self.n)
+                    
+                # lower left corner (0, 0)
+                elif pl[0] == 0 and pl[1] == 0:
+                    player.play(self.grid[1][0], 0, self.n)
+                    player.play(self.grid[1][self.N-1], 1, self.n)
+                    player.play(self.grid[0][self.N-1], 2, self.n)
+                    player.play(self.grid[self.N-1][self.N-1], 3, self.n)
+                    player.play(self.grid[self.N-1][0], 4, self.n)
+                    player.play(self.grid[self.N-1][1], 5, self.n)
+                    player.play(self.grid[0][1], 6, self.n)
+                    player.play(self.grid[1][1], 7, self.n)
+                    
+                # upper left corner (0, N-1)
+                elif pl[0] == 0 and pl[1] == self.N-1:
+                    player.play(self.grid[1][self.N-1], 0, self.n)
+                    player.play(self.grid[1][self.N-2], 1, self.n)
+                    player.play(self.grid[0][self.N-2], 2, self.n)
+                    player.play(self.grid[self.N-1][self.N-2], 3, self.n)
+                    player.play(self.grid[self.N-1][self.N-1], 4, self.n)
+                    player.play(self.grid[self.N-1][0], 5, self.n)
+                    player.play(self.grid[0][0], 6, self.n)
+                    player.play(self.grid[1][0], 7, self.n)
+                    
+                # upper right corner (N-1, N-1)
+                elif pl[0] == self.N-1 and pl[1] == self.N-1:
+                    player.play(self.grid[0][self.N-1], 0, self.n)
+                    player.play(self.grid[0][self.N-2], 1, self.n)
+                    player.play(self.grid[self.N-1][self.N-2], 2, self.n)
+                    player.play(self.grid[self.N-2][self.N-2], 3, self.n)
+                    player.play(self.grid[self.N-2][self.N-1], 4, self.n)
+                    player.play(self.grid[self.N-2][0], 5, self.n)
+                    player.play(self.grid[self.N-1][0], 6, self.n)
+                    player.play(self.grid[0][0], 7, self.n)
+                    
+                # lower right corner (N-1, 0)
+                elif pl[0] == self.N-1 and pl[1] == 0:
+                    player.play(self.grid[0][0], 0, self.n)
+                    player.play(self.grid[0][self.N-1], 1, self.n)
+                    player.play(self.grid[self.N-1][self.N-1], 2, self.n)
+                    player.play(self.grid[self.N-2][self.N-1], 3, self.n)
+                    player.play(self.grid[self.N-2][0], 4, self.n)
+                    player.play(self.grid[self.N-2][1], 5, self.n)
+                    player.play(self.grid[self.N-1][1], 6, self.n)
+                    player.play(self.grid[0][1], 7, self.n)
+                    
+                # bottom edge (i, 0)
+                elif pl[1] == 0:
+                    player.play(self.grid[i+1][0], 0, self.n)
+                    player.play(self.grid[i+1][self.N-1], 1, self.n)
+                    player.play(self.grid[i][self.N-1], 2, self.n)
+                    player.play(self.grid[i-1][self.N-1], 3, self.n)
+                    player.play(self.grid[i-1][0], 4, self.n)
+                    player.play(self.grid[i-1][1], 5, self.n)
+                    player.play(self.grid[i][1], 6, self.n)
+                    player.play(self.grid[i+1][1], 7, self.n)
+                    
+                # left edge (0, j)
+                elif pl[0] == 0:
+                    player.play(self.grid[1][j], 0, self.n)
+                    player.play(self.grid[1][j-1], 1, self.n)
+                    player.play(self.grid[0][j-1], 2, self.n)
+                    player.play(self.grid[self.N-1][j-1], 3, self.n)
+                    player.play(self.grid[self.N-1][j], 4, self.n)
+                    player.play(self.grid[self.N-1][j+1], 5, self.n)
+                    player.play(self.grid[0][j+1], 6, self.n)
+                    player.play(self.grid[1][j+1], 7, self.n)
+                    
+                # top edge (i, N-1)
+                elif pl[1] == self.N-1:
+                    player.play(self.grid[i+1][self.N-1], 0, self.n)
+                    player.play(self.grid[i+1][self.N-2], 1, self.n)
+                    player.play(self.grid[i][self.N-2], 2, self.n)
+                    player.play(self.grid[i-1][self.N-2], 3, self.n)
+                    player.play(self.grid[i-1][self.N-1], 4, self.n)
+                    player.play(self.grid[i-1][0], 5, self.n)
+                    player.play(self.grid[i][0], 6, self.n)
+                    player.play(self.grid[i+1][0], 7, self.n)
+                    
+                # right edge (N-1, j)
+                elif pl[0] == self.N-1:
+                    player.play(self.grid[0][j], 0, self.n)
+                    player.play(self.grid[0][j-1], 1, self.n)
+                    player.play(self.grid[self.N-1][j-1], 2, self.n)
+                    player.play(self.grid[self.N-2][j-1], 3, self.n)
+                    player.play(self.grid[self.N-2][j], 4, self.n)
+                    player.play(self.grid[self.N-2][j+1], 5, self.n)
+                    player.play(self.grid[self.N-1][j+1], 6, self.n)
+                    player.play(self.grid[0][j+1], 7, self.n)
+                        
+        
+sim = Simulation(5, 10)
 sim.clock_tick()
 
-            
-        
-    
-    
+
+
+
