@@ -1,5 +1,6 @@
 import numpy as np
 import random as rnd
+from copy import deepcopy
 
 # Set random seeds so that any randomness is reproducible
 rnd.seed(0)
@@ -31,6 +32,7 @@ def RPS(move_p1, move_p2):
         return 'L', 'W'
 
 
+
 # Class to create a new player
 class Player:
     
@@ -60,6 +62,8 @@ class Player:
         #       single player, so row 0 = vs R, row 1 = vs DR, etc...
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
+        #self.overallResult = np.empty(8, dtype='str')
+        self.losses = 0
         
         # Variables to store last move chosen by player
         self.prev_move = ''
@@ -142,6 +146,16 @@ class Player:
             player2.prev_move = p2_move
             player2.prev_res = res[1]
             
+            
+    def change_strategy(self, strategy):
+        
+        '''
+        Change the strategy of a Player object taking argument 'strategy'
+        '''
+        
+        self.strat = strategy
+
+          
 
 class Simulation:
     
@@ -286,9 +300,44 @@ class Simulation:
                     player.play(self.grid[self.N-1][j+1], 6, self.n)
                     player.play(self.grid[0][j+1], 7, self.n)
                 '''
+
+    def changeAllStrategies(self):
+        
+        '''
+        Change all strategies of players based on number of losses
+        '''
+        
+        for i in range(self.N):
+            for j in range(self.N):
+                player = self.grid[i][j]    # cycle through all players
+                player.losses = 0           # initialise variable to 0
+                for k in range(8):
+                    res = player.results[k]   # cycle through 8 opponents
+                    
+                    # count as a loss if lost more than n/2 games
+                    if np.count_nonzero(res == 'L') >= (self.n/2):
+                        player.losses += 1
+                
+                # if the player lost to at least 4 opponents, change strategy
+                if player.losses >= 4:
+                    loc_strats = deepcopy(strats)
+                    loc_strats.remove(player.strat)
+                    player.change_strategy(rnd.choice(loc_strats))
+                    
+    
+    def play(self, n):
+        
+        '''
+        Simulate RPS over n clock ticks
+        '''
+        
+        for i in range(n):
+            self.clock_tick()
+            self.changeAllStrategies()
+        
         
 sim = Simulation(5, 10)
-sim.clock_tick()
+sim.play(5)
 
 
 
