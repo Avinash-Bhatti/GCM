@@ -335,10 +335,25 @@ class Simulation:
             self.clock_tick()
             self.changeAllStrategies()
         
-        
-sim = Simulation(5, 10)
-sim.play(5)
+#%%     
+   
+sim = Simulation(3, 10)
+sim.grid[0][0].change_strategy('always_paper')
+sim.grid[1][0].change_strategy('always_paper')
+sim.grid[2][0].change_strategy('always_paper')
+sim.grid[0][1].change_strategy('always_paper')
+sim.grid[1][1].change_strategy('always_rock')
+sim.grid[2][1].change_strategy('always_paper')
+sim.grid[0][2].change_strategy('always_paper')
+sim.grid[1][2].change_strategy('always_paper')
+sim.grid[2][2].change_strategy('always_paper')
 
+#%%
 
+sim.clock_tick()
+
+#%%
+
+sim.changeAllStrategies()
 
 
