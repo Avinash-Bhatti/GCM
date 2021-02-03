@@ -10,6 +10,9 @@ key = ["R", "P", "S"]
 strats = ["always_rock", "always_scissors", "always_paper", "human", 
           "anti-human"]
 
+strat_array = np.array(strats)
+
+
 # Define function to play RPS from the perspective of player 1
 # Returns 'result for player 1', 'result for player 2'
 def RPS(move_p1, move_p2):
@@ -18,13 +21,13 @@ def RPS(move_p1, move_p2):
     ind2 = key.index(move_p2)
     
     if ind1 == ind2:
-        return 'D', 'D'
+        return 'D', 'D', 1
     
     elif ind1 == (ind2 + 1) or ind1 == (ind2 - 2):
-        return 'W', 'L'
+        return 'W', 'L', 0
     
     else:
-        return 'L', 'W'
+        return 'L', 'W', -1
 
 
 # Class to create a new player
@@ -64,12 +67,14 @@ class Player:
 
         self.prev_move = ','
         self.prev_res = ','
+        
+        self.score = 0
     
     
     # Function that decides on what move to play
     # Will look at the strategy of the player and which opponent its playing,
     # and its previous moves and results in the current set of play
-    def choose_move(self, i, p):
+    def choose_move(self, p):
         
         if self.strat == "always_rock":
             return "R"
@@ -114,9 +119,10 @@ class Player:
     #(i.e. the game verus the player below me will be my 3rd set of matches, but it will be his 7th set of matches)
     def play(self, player2, i, n):   # play N games
         
+        temp_score = 0
         for p in range(0, n):
-            p1_move = self.choose_move(i, p)
-            p2_move = player2.choose_move(i, p)
+            p1_move = self.choose_move(p)
+            p2_move = player2.choose_move(p)
             res = RPS(p1_move, p2_move)
             self.results[i, p] = res[0]
             self.moves[i, p] = p1_move
@@ -128,6 +134,13 @@ class Player:
             player2.prev_move = p2_move
             player2.prev_res = res[1]
             
+            temp_score += res[2]
+        if temp_score > 0:
+            self.score += 1
+        elif temp_score == 0:
+            pass
+        else:
+            self.score -= 1
             
             
 
@@ -142,7 +155,7 @@ class Simulation:
             #Append rows one at a time
             row = np.array([])
             for j in range(N):
-                row = np.append(row, Player(rnd.choice(strats),n, [i, j]))
+                row = np.append(row, Player(rnd.choice(strats),[i, j], n))
             row = row.reshape(1, N)
             self.grid = np.append(self.grid, row, axis=0)
             
@@ -151,6 +164,7 @@ class Simulation:
     #Define a function to play a round of n games versus a players nearest 8 neighbours
     def play_round(self, player1):
         pl = player1.loc
+        
         for i in range(0, 8):
             #I've implemented this using a rounded trig, so we circularly rotate around
             p2_loc = pl + [round(np.sin(-45*i)), round(np.cos(-45*i))]
@@ -163,12 +177,27 @@ class Simulation:
             for j in i:
                 self.play_round(j)
                 
-        
+    def update_strats(self):
+        #Compute a global clock tick
+        for i in self.grid:
+            for j in i:
+                if j.score >= 0:
+                    pass
+                else:
+                    j.strategy = rnd.choice(strat_array[strat_array[:] != j.strategy])
+                
+                j.score = 0
+                
+    def run(self, N):
+        #run N clock ticks
+        for i in range(N):
+            self.clock_tick()
+            self.update_strats()
                 
     
             
 sim = Simulation(3, 3)
-sim.clock_tick()
+sim.run(10)
 
             
         
