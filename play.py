@@ -7,11 +7,27 @@ rnd.seed(0)
 np.random.seed(0)
 
 key = ["R", "P", "S"]
+"""
 strats = ["always_rock", "always_scissors", "always_paper", "human", 
           "anti-human"]
+strat_key = np.array([0,1,2,3,4])
 
 strat_array = np.array(strats)
 
+
+strats = ["always_rock", "always_scissors", "always_paper"]
+
+strat_key = np.array([0,1,2])
+
+strat_array = np.array(strats)
+"""
+
+strats = ["always_rock", "always_scissors", "always_paper", "human", 
+          "anti-human"]
+
+strat_key = np.array([3,4])
+
+strat_array = np.array(strats)
 
 # Define function to play RPS from the perspective of player 1
 # Returns 'result for player 1', 'result for player 2'
@@ -21,10 +37,10 @@ def RPS(move_p1, move_p2):
     ind2 = key.index(move_p2)
     
     if ind1 == ind2:
-        return 'D', 'D', 1
+        return 'D', 'D', 0
     
     elif ind1 == (ind2 + 1) or ind1 == (ind2 - 2):
-        return 'W', 'L', 0
+        return 'W', 'L', 1
     
     else:
         return 'L', 'W', -1
@@ -49,7 +65,7 @@ class Player:
     
     def __init__(self, strategy, location=[0, 0], n=1):
         self.strat = strategy   # strategy of player
-        self.loc = location   # location of player
+        self.loc = np.array(location)  # location of player
         
         # lists to store players previous results and moves
         # Note: we play games starting from R, and proceeding clockwise
@@ -76,16 +92,16 @@ class Player:
     # and its previous moves and results in the current set of play
     def choose_move(self, p):
         
-        if self.strat == "always_rock":
+        if self.strat == strats.index("always_rock"):
             return "R"
         
-        elif self.strat == "always_paper":
+        elif self.strat == strats.index("always_paper"):
             return "P"
         
-        elif self.strat == "always_scissors":
+        elif self.strat == strats.index("always_scissors"):
             return "S"
         
-        elif self.strat == "human":
+        elif self.strat == strats.index("human"):
             if p == 0:
                 return rnd.choice(key)
             else:
@@ -98,7 +114,7 @@ class Player:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
                 
-        elif self.strat == "anti-human":
+        elif self.strat == strats.index("anti-human"):
             if p == 0:
                 return rnd.choice(key)
             else:
@@ -141,21 +157,25 @@ class Player:
             pass
         else:
             self.score -= 1
+        
             
             
 
 class Simulation:
     #initialise an NxN grid of players, with n games per clock tick
-    def __init__(self, N, n):
+    def __init__(self, N, n, T):
         self.grid = np.array([]).reshape((0,N))
         self.N = N
         self.n = n
+        self.T = T
+        self.debug = 0
+        self.ims = np.empty((T,N,N))
         
         for i in range(N):
             #Append rows one at a time
             row = np.array([])
             for j in range(N):
-                row = np.append(row, Player(rnd.choice(strats),[i, j], n))
+                row = np.append(row, Player(rnd.choice(strat_key),[i, j], n))
             row = row.reshape(1, N)
             self.grid = np.append(self.grid, row, axis=0)
             
@@ -165,11 +185,32 @@ class Simulation:
     def play_round(self, player1):
         pl = player1.loc
         
-        for i in range(0, 8):
-            #I've implemented this using a rounded trig, so we circularly rotate around
-            p2_loc = pl + [round(np.sin(-45*i)), round(np.cos(-45*i))]
-            player2 = self.grid[p2_loc[0]%self.N, p2_loc[1]%self.N]
-            player1.play(player2, i, self.n)
+    
+            
+        player2 = self.grid[(pl[0]+1)%self.N, (pl[1])%self.N]
+        player1.play(player2, 0, self.n)
+        
+        player2 = self.grid[(pl[0]+1)%self.N, (pl[1]+1)%self.N]
+        player1.play(player2, 1, self.n)
+        
+        player2 = self.grid[(pl[0])%self.N, (pl[1]+1)%self.N]
+        player1.play(player2, 2, self.n)
+        
+        player2 = self.grid[(pl[0]-1)%self.N, (pl[1]+1)%self.N]
+        player1.play(player2, 3, self.n)
+        
+        player2 = self.grid[(pl[0]-1)%self.N, (pl[1])%self.N]
+        player1.play(player2, 4, self.n)
+        
+        player2 = self.grid[(pl[0]-1)%self.N, (pl[1]-1)%self.N]
+        player1.play(player2, 5, self.n)
+        
+        player2 = self.grid[(pl[0])%self.N, (pl[1]-1)%self.N]
+        player1.play(player2, 6, self.n)                                   
+        
+        player2 = self.grid[(pl[0]+1)%self.N, (pl[1]-1)%self.N]
+        player1.play(player2, 7, self.n)
+        
             
     def clock_tick(self):
         #Compute a global clock tick
@@ -184,22 +225,58 @@ class Simulation:
                 if j.score >= 0:
                     pass
                 else:
-                    j.strategy = rnd.choice(strat_array[strat_array[:] != j.strategy])
+                    j.strat = rnd.choice(strat_key[strat_key[:] != j.strat])
                 
                 j.score = 0
                 
-    def run(self, N):
+    def extract_data(self, i):
+        self.ims[i] = np.array([[j.strat for j in i] for i in sim.grid])
+        
+    def run(self):
         #run N clock ticks
-        for i in range(N):
+        for i in range(self.T):
             self.clock_tick()
+            self.extract_data(i)
             self.update_strats()
                 
     
             
-sim = Simulation(3, 3)
-sim.run(10)
+sim = Simulation(20, 5, 100)
+sim.run()
 
-            
+
+
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+
+
+import matplotlib.animation as animation
+
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
+
+
+
+
+fig2 = plt.figure()
+
+x = np.arange(-0.5, 20.5, 1)
+y = np.arange(-0.5, 20.5, 1).reshape(-1, 1)
+base = np.hypot(x, y)
+ims = []
+for i in np.arange(30):
+    ims.append((plt.pcolor(x, y, sim.ims[i], vmin=3, vmax=4),))
+
+im_ani = animation.ArtistAnimation(fig2, ims, interval=200, repeat_delay=3000,
+                                   blit=True)
+im_ani.save('im.mp4', writer=writer)      
         
     
     
