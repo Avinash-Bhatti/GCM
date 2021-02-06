@@ -1,6 +1,9 @@
 import numpy as np
 import random as rnd
 from copy import deepcopy
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.animation as animation
 
 # Set random seeds so that any randomness is reproducible
 rnd.seed(0)
@@ -8,8 +11,8 @@ np.random.seed(0)
 
 
 key = ["R", "P", "S"]
-strats = ["always_rock", "always_scissors", "always_paper", "human", 
-          "anti-human"]
+strats = ["always_rock", "always_paper", "always_scissors", "human", 
+          "anti-human", "random_choice"]
 
 
 def RPS(move_p1, move_p2):
@@ -63,7 +66,7 @@ class Player:
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
         #self.overallResult = np.empty(8, dtype='str')
-        self.losses = 0
+        self.wins = 0
         
         # Variables to store last move chosen by player
         self.prev_move = ''
@@ -120,6 +123,9 @@ class Player:
                     ind = (key.index(self.prev_move)-1)%3
                     return key[ind]
                 
+        elif self.strat == "random_choice":
+            return rnd.choice(key)
+                
 
     def play(self, player2, i, n):   # play N games
         
@@ -169,7 +175,7 @@ class Simulation:
         self.N = N
         self.n = n
         
-        # Create N-1 x N-1 grid of Player objects
+        # Create N x N grid of Player objects
         for i in range(N):
             row = []
             for j in range(N):
@@ -177,6 +183,18 @@ class Simulation:
             self.grid.append(row)
             
         self.grid = np.array(self.grid)
+        
+        
+        self.Z = []
+        
+        initial = []
+        for i in range(self.N):
+            initial.append([])
+        for j in range(self.N):
+            for i in range(self.N):
+                initial[j].append(strats.index(self.grid[i][j].strat))
+                
+        self.Z.append(initial)
         
 
     def clock_tick(self):
@@ -198,131 +216,40 @@ class Simulation:
                 player.play(self.grid[i][(j+1)%self.N], 6, self.n)
                 player.play(self.grid[(i+1)%self.N][(j+1)%self.N], 7, self.n)
                 
-                
-                '''
-                # no boundary conditions (middle players)
-                if pl[0] != 0 and pl[0] != self.N-1 \
-                                    and pl[1] != 0 and pl[1] != self.N-1:
-                    player.play(self.grid[i+1][j], 0, self.n)
-                    player.play(self.grid[i+1][j-1], 1, self.n)
-                    player.play(self.grid[i][j-1], 2, self.n)
-                    player.play(self.grid[i-1][j-1], 3, self.n)
-                    player.play(self.grid[i-1][j], 4, self.n)
-                    player.play(self.grid[i-1][j+1], 5, self.n)
-                    player.play(self.grid[i][j+1], 6, self.n)
-                    player.play(self.grid[i+1][j+1], 7, self.n)
-                    
-                # lower left corner (0, 0)
-                elif pl[0] == 0 and pl[1] == 0:
-                    player.play(self.grid[1][0], 0, self.n)
-                    player.play(self.grid[1][self.N-1], 1, self.n)
-                    player.play(self.grid[0][self.N-1], 2, self.n)
-                    player.play(self.grid[self.N-1][self.N-1], 3, self.n)
-                    player.play(self.grid[self.N-1][0], 4, self.n)
-                    player.play(self.grid[self.N-1][1], 5, self.n)
-                    player.play(self.grid[0][1], 6, self.n)
-                    player.play(self.grid[1][1], 7, self.n)
-                    
-                # upper left corner (0, N-1)
-                elif pl[0] == 0 and pl[1] == self.N-1:
-                    player.play(self.grid[1][self.N-1], 0, self.n)
-                    player.play(self.grid[1][self.N-2], 1, self.n)
-                    player.play(self.grid[0][self.N-2], 2, self.n)
-                    player.play(self.grid[self.N-1][self.N-2], 3, self.n)
-                    player.play(self.grid[self.N-1][self.N-1], 4, self.n)
-                    player.play(self.grid[self.N-1][0], 5, self.n)
-                    player.play(self.grid[0][0], 6, self.n)
-                    player.play(self.grid[1][0], 7, self.n)
-                    
-                # upper right corner (N-1, N-1)
-                elif pl[0] == self.N-1 and pl[1] == self.N-1:
-                    player.play(self.grid[0][self.N-1], 0, self.n)
-                    player.play(self.grid[0][self.N-2], 1, self.n)
-                    player.play(self.grid[self.N-1][self.N-2], 2, self.n)
-                    player.play(self.grid[self.N-2][self.N-2], 3, self.n)
-                    player.play(self.grid[self.N-2][self.N-1], 4, self.n)
-                    player.play(self.grid[self.N-2][0], 5, self.n)
-                    player.play(self.grid[self.N-1][0], 6, self.n)
-                    player.play(self.grid[0][0], 7, self.n)
-                    
-                # lower right corner (N-1, 0)
-                elif pl[0] == self.N-1 and pl[1] == 0:
-                    player.play(self.grid[0][0], 0, self.n)
-                    player.play(self.grid[0][self.N-1], 1, self.n)
-                    player.play(self.grid[self.N-1][self.N-1], 2, self.n)
-                    player.play(self.grid[self.N-2][self.N-1], 3, self.n)
-                    player.play(self.grid[self.N-2][0], 4, self.n)
-                    player.play(self.grid[self.N-2][1], 5, self.n)
-                    player.play(self.grid[self.N-1][1], 6, self.n)
-                    player.play(self.grid[0][1], 7, self.n)
-                    
-                # bottom edge (i, 0)
-                elif pl[1] == 0:
-                    player.play(self.grid[i+1][0], 0, self.n)
-                    player.play(self.grid[i+1][self.N-1], 1, self.n)
-                    player.play(self.grid[i][self.N-1], 2, self.n)
-                    player.play(self.grid[i-1][self.N-1], 3, self.n)
-                    player.play(self.grid[i-1][0], 4, self.n)
-                    player.play(self.grid[i-1][1], 5, self.n)
-                    player.play(self.grid[i][1], 6, self.n)
-                    player.play(self.grid[i+1][1], 7, self.n)
-                    
-                # left edge (0, j)
-                elif pl[0] == 0:
-                    player.play(self.grid[1][j], 0, self.n)
-                    player.play(self.grid[1][j-1], 1, self.n)
-                    player.play(self.grid[0][j-1], 2, self.n)
-                    player.play(self.grid[self.N-1][j-1], 3, self.n)
-                    player.play(self.grid[self.N-1][j], 4, self.n)
-                    player.play(self.grid[self.N-1][j+1], 5, self.n)
-                    player.play(self.grid[0][j+1], 6, self.n)
-                    player.play(self.grid[1][j+1], 7, self.n)
-                    
-                # top edge (i, N-1)
-                elif pl[1] == self.N-1:
-                    player.play(self.grid[i+1][self.N-1], 0, self.n)
-                    player.play(self.grid[i+1][self.N-2], 1, self.n)
-                    player.play(self.grid[i][self.N-2], 2, self.n)
-                    player.play(self.grid[i-1][self.N-2], 3, self.n)
-                    player.play(self.grid[i-1][self.N-1], 4, self.n)
-                    player.play(self.grid[i-1][0], 5, self.n)
-                    player.play(self.grid[i][0], 6, self.n)
-                    player.play(self.grid[i+1][0], 7, self.n)
-                    
-                # right edge (N-1, j)
-                elif pl[0] == self.N-1:
-                    player.play(self.grid[0][j], 0, self.n)
-                    player.play(self.grid[0][j-1], 1, self.n)
-                    player.play(self.grid[self.N-1][j-1], 2, self.n)
-                    player.play(self.grid[self.N-2][j-1], 3, self.n)
-                    player.play(self.grid[self.N-2][j], 4, self.n)
-                    player.play(self.grid[self.N-2][j+1], 5, self.n)
-                    player.play(self.grid[self.N-1][j+1], 6, self.n)
-                    player.play(self.grid[0][j+1], 7, self.n)
-                '''
 
     def changeAllStrategies(self):
         
         '''
-        Change all strategies of players based on number of losses
+        Change all strategies of players based on number of wins
         '''
         
         for i in range(self.N):
             for j in range(self.N):
                 player = self.grid[i][j]    # cycle through all players
-                player.losses = 0           # initialise variable to 0
+                player.wins = 0           # initialise variable to 0
                 for k in range(8):
                     res = player.results[k]   # cycle through 8 opponents
                     
-                    # count as a loss if lost more than n/2 games
-                    if np.count_nonzero(res == 'L') >= (self.n/2):
-                        player.losses += 1
+                    # count as a win if won more than n/2 games
+                    if np.count_nonzero(res == 'W') >= (self.n/2):
+                        player.wins += 1
                 
-                # if the player lost to at least 4 opponents, change strategy
-                if player.losses >= 4:
+                # if the player wins against at least 4 opponents, keep the
+                # same strategy
+                if player.wins < 4:
                     loc_strats = deepcopy(strats)
                     loc_strats.remove(player.strat)
                     player.change_strategy(rnd.choice(loc_strats))
+
+
+        l = []
+        for i in range(self.N):
+            l.append([])
+        for j in range(self.N):
+            for i in range(self.N):
+                l[j].append(strats.index(self.grid[i][j].strat))
+            
+        self.Z.append(l)
                     
     
     def play(self, n):
@@ -330,30 +257,38 @@ class Simulation:
         '''
         Simulate RPS over n clock ticks
         '''
-        
+            
         for i in range(n):
             self.clock_tick()
             self.changeAllStrategies()
+            
+        fig = plt.figure()
+        fig.add_axes([0.1, 0.1, 0.6, 0.75])
+        im = plt.imshow(self.Z[0], aspect='equal', origin='lower')
+        plotting_strats = ["Always Rock", "Always Paper", "Always Scissors",
+                           "Human", "Anti-human", "Random"]
+        vals = np.arange(0, len(plotting_strats))
+        colors = [im.cmap(im.norm(value)) for value in vals]
+        patches = [mpatches.Patch(color=colors[i], \
+            label="{}".format(plotting_strats[i])) for i in range(len(vals))]
+        plt.legend(handles=patches, bbox_to_anchor=(1.02,1), loc=2)
+        plt.xticks(np.arange(0, self.N))
+        plt.yticks(np.arange(0, self.N))
         
-#%%     
-   
-sim = Simulation(3, 10)
-sim.grid[0][0].change_strategy('always_paper')
-sim.grid[1][0].change_strategy('always_paper')
-sim.grid[2][0].change_strategy('always_paper')
-sim.grid[0][1].change_strategy('always_paper')
-sim.grid[1][1].change_strategy('always_rock')
-sim.grid[2][1].change_strategy('always_paper')
-sim.grid[0][2].change_strategy('always_paper')
-sim.grid[1][2].change_strategy('always_paper')
-sim.grid[2][2].change_strategy('always_paper')
+        def animate_func(i):
+            im.set_array(self.Z[i])
+            return [im]
+
+        anim = animation.FuncAnimation(fig, animate_func, frames=len(self.Z),\
+                                       interval=500, repeat=False, blit=True)
+        anim.save('test.mp4', writer='ffmpeg', bitrate=2000)
+        plt.show()
+
 
 #%%
 
-sim.clock_tick()
+sim = Simulation(10, 10)
+sim.play(10)
 
-#%%
-
-sim.changeAllStrategies()
 
 
