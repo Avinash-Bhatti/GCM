@@ -65,14 +65,12 @@ class Player:
         #       single player, so row 0 = vs R, row 1 = vs DR, etc...
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
-        #self.overallResult = np.empty(8, dtype='str')
-        self.wins = 0
+        
+        self.wins = 0   # variable to count wins
         
         # Variables to store last move chosen by player
         self.prev_move = ''
-        self.prev_res = ''
-        # we don't need a variable for this? can just index [-1]???
-    
+        self.prev_res = ''    
     
 
     def choose_move(self, p):
@@ -185,15 +183,16 @@ class Simulation:
         self.grid = np.array(self.grid)
         
         
-        self.Z = []
+        self.Z = []   # list to store strats for plotting
         
+        # inital strats
         initial = []
+        # create NxN list
         for i in range(self.N):
             initial.append([])
         for j in range(self.N):
             for i in range(self.N):
-                initial[j].append(strats.index(self.grid[i][j].strat))
-                
+                initial[j].append(strats.index(self.grid[i][j].strat))   
         self.Z.append(initial)
         
 
@@ -241,14 +240,13 @@ class Simulation:
                     loc_strats.remove(player.strat)
                     player.change_strategy(rnd.choice(loc_strats))
 
-
+        # store strats for plotting
         l = []
         for i in range(self.N):
             l.append([])
         for j in range(self.N):
             for i in range(self.N):
                 l[j].append(strats.index(self.grid[i][j].strat))
-            
         self.Z.append(l)
                     
     
@@ -261,19 +259,24 @@ class Simulation:
         for i in range(n):
             self.clock_tick()
             self.changeAllStrategies()
-            
+        
+        # plotting
         fig = plt.figure()
-        fig.add_axes([0.1, 0.1, 0.6, 0.75])
+        fig.add_axes([0.1, 0.11, 0.6, 0.8])
         im = plt.imshow(self.Z[0], aspect='equal', origin='lower')
-        plotting_strats = ["Always Rock", "Always Paper", "Always Scissors",
+        plot_strats = ["Always Rock", "Always Paper", "Always Scissors",
                            "Human", "Anti-human", "Random"]
-        vals = np.arange(0, len(plotting_strats))
-        colors = [im.cmap(im.norm(value)) for value in vals]
-        patches = [mpatches.Patch(color=colors[i], \
-            label="{}".format(plotting_strats[i])) for i in range(len(vals))]
+        vals = np.arange(0, len(plot_strats))
+        colours = [im.cmap(im.norm(value)) for value in vals]
+        patches = [mpatches.Patch(color=colours[i], label="{}"\
+                    .format(plot_strats[i])) for i in range(len(plot_strats))]
         plt.legend(handles=patches, bbox_to_anchor=(1.02,1), loc=2)
         plt.xticks(np.arange(0, self.N))
         plt.yticks(np.arange(0, self.N))
+        plt.xlabel('x coordinate')
+        plt.ylabel('y coordinate')
+        plt.title('{}x{} grid of players playing {} clock ticks'\
+                  .format(self.N, self.N, n))
         
         def animate_func(i):
             im.set_array(self.Z[i])
@@ -281,14 +284,14 @@ class Simulation:
 
         anim = animation.FuncAnimation(fig, animate_func, frames=len(self.Z),\
                                        interval=500, repeat=False, blit=True)
-        anim.save('test.mp4', writer='ffmpeg', bitrate=2000)
+        anim.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,n),writer='ffmpeg')
         plt.show()
 
 
 #%%
 
-sim = Simulation(10, 10)
-sim.play(10)
+sim = Simulation(20, 10)
+sim.play(100)
 
 
 
