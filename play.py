@@ -300,10 +300,11 @@ class Simulation:
         anim = animation.FuncAnimation(fig, animate_func, frames=len(self.Z),\
                                        interval=500, repeat=False, blit=True)
         anim.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,t),writer='ffmpeg')
-        plt.show()
         
         cd = os.getcwd()
         print("MP4 file saved in {}".format(cd))
+        
+        plt.show(block=True)
 
 
 #%%
