@@ -238,6 +238,7 @@ class Simulation:
                             score -= 1
                         elif res[i] == 'D':
                             score = score
+                    score = score / self.n
                     player.points.append(score)
                 
                 # if player's average points are < 0, change strategy
