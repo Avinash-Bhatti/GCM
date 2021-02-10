@@ -67,7 +67,7 @@ class Player:
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
         
-        self.points = np.zeros(8)   # array to store points
+        self.res = np.empty(8, dtype='str')   # array to store results
         
         # Variables to store last move chosen by player
         self.prev_move = ''
@@ -156,8 +156,13 @@ class Player:
                 score += 1
             elif res[0] == 'L':
                 score -= 1
-                
-        self.points[i] = score/n
+        
+        if score > 0:
+            self.res[i] = 'W'
+        elif score < 0:
+            self.res[i] = 'L'
+        else:
+            self.res[i] = 'D'
             
             
     def change_strategy(self, strategy):
@@ -234,9 +239,17 @@ class Simulation:
         for i in range(self.N):
             for j in range(self.N):
                 player = self.grid[i][j]    # cycle through all players
-
-                # if player's average points are < 0, change strategy
-                if np.mean(player.points) < 0:
+                
+                score = 0
+                for i in range(8):
+                    res = player.res[i]
+                    if res == 'W':
+                        score += 1
+                    elif res == 'L':
+                        score -= 1
+                        
+                # if score < 0, change strategy
+                if score < 0:
                     temp_strats = deepcopy(strats)
                     temp_strats.remove(player.strat)
                     player.change_strategy(rnd.choice(temp_strats))
