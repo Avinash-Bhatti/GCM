@@ -51,7 +51,7 @@ class Player:
     
     Location will be a list of two elements consisting of x and y coordinates
     
-    n is the number of games played per clock tick
+    n is the number of games played per clock tick vs each opponent
     '''
     
     def __init__(self, strategy, location, n):
@@ -67,7 +67,7 @@ class Player:
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
         
-        self.wins = 0   # variable to count wins
+        self.points = []   # variable to count points
         
         # Variables to store last move chosen by player
         self.prev_move = ''
@@ -220,26 +220,31 @@ class Simulation:
     def changeAllStrategies(self):
         
         '''
-        Change all strategies of players based on number of wins
+        Change all strategies of players based on points
         '''
         
         for i in range(self.N):
             for j in range(self.N):
                 player = self.grid[i][j]    # cycle through all players
-                player.wins = 0           # initialise variable to 0
+                player.points = []          # initialise to empty list
                 for k in range(8):
                     res = player.results[k]   # cycle through 8 opponents
                     
-                    # count as a win if won more than n/2 games
-                    if np.count_nonzero(res == 'W') >= (self.n/2):
-                        player.wins += 1
+                    score = 0
+                    for i in range(self.n):
+                        if res[i] == 'W':
+                            score += 1
+                        elif res[i] == 'L':
+                            score -= 1
+                        elif res[i] == 'D':
+                            score = score
+                    player.points.append(score)
                 
-                # if the player wins against at least 4 opponents, keep the
-                # same strategy
-                if player.wins < 4:
-                    loc_strats = deepcopy(strats)
-                    loc_strats.remove(player.strat)
-                    player.change_strategy(rnd.choice(loc_strats))
+                # if player's average points are < 0, change strategy
+                if np.mean(player.points) < 0:
+                    temp_strats = deepcopy(strats)
+                    temp_strats.remove(player.strat)
+                    player.change_strategy(rnd.choice(temp_strats))
 
         # store strats for plotting
         l = []
