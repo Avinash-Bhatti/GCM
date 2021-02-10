@@ -4,6 +4,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.animation as animation
+import os
 
 # Set random seeds so that any randomness is reproducible
 rnd.seed(0)
@@ -250,13 +251,13 @@ class Simulation:
         self.Z.append(l)
                     
     
-    def play(self, n):
+    def play(self, t):
         
         '''
-        Simulate RPS over n clock ticks
+        Simulate RPS over t clock ticks
         '''
             
-        for i in range(n):
+        for i in range(t):
             self.clock_tick()
             self.changeAllStrategies()
         
@@ -276,7 +277,7 @@ class Simulation:
         plt.xlabel('x coordinate')
         plt.ylabel('y coordinate')
         plt.title('{}x{} grid of players playing {} clock ticks'\
-                  .format(self.N, self.N, n))
+                  .format(self.N, self.N, t))
         
         def animate_func(i):
             im.set_array(self.Z[i])
@@ -284,14 +285,15 @@ class Simulation:
 
         anim = animation.FuncAnimation(fig, animate_func, frames=len(self.Z),\
                                        interval=500, repeat=False, blit=True)
-        anim.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,n),writer='ffmpeg')
+        anim.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,t),writer='ffmpeg')
         plt.show()
+        
+        cd = os.getcwd()
+        print("MP4 file saved in {}".format(cd))
 
 
 #%%
 
 sim = Simulation(20, 10)
 sim.play(100)
-
-
 
