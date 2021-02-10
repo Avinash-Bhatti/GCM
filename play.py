@@ -199,15 +199,23 @@ class Simulation:
         
         self.Z = []   # list to store strats for plotting
         
-        # inital strats
-        initial = []
+        
+    def storeStrats(self):
+        
+        '''
+        Store the strategies for plotting 
+        '''
+        
         # create NxN list
+        l = []
         for i in range(self.N):
-            initial.append([])
+            l.append([])
+            
+        # add the strats index for plotting
         for j in range(self.N):
             for i in range(self.N):
-                initial[j].append(strats.index(self.grid[i][j].strat))   
-        self.Z.append(initial)
+                l[j].append(strats.index(self.grid[i][j].strat))   
+        self.Z.append(l)
         
 
     def clock_tick(self):
@@ -255,13 +263,7 @@ class Simulation:
                     player.change_strategy(rnd.choice(temp_strats))
 
         # store strats for plotting
-        l = []
-        for i in range(self.N):
-            l.append([])
-        for j in range(self.N):
-            for i in range(self.N):
-                l[j].append(strats.index(self.grid[i][j].strat))
-        self.Z.append(l)
+        self.storeStrats()
                     
     
     def play(self, t):
@@ -269,7 +271,9 @@ class Simulation:
         '''
         Simulate RPS over t clock ticks
         '''
-            
+        
+        self.storeStrats()
+        
         for i in range(t):
             self.clock_tick()
             self.changeAllStrategies()
@@ -304,7 +308,7 @@ class Simulation:
         cd = os.getcwd()
         print("MP4 file saved in {}".format(cd))
         
-        plt.show(block=True)
+        plt.show()
 
 
 #%%
