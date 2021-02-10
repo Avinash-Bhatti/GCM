@@ -67,7 +67,7 @@ class Player:
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
         
-        self.points = []   # variable to count points
+        self.points = np.zeros(8)   # array to store points
         
         # Variables to store last move chosen by player
         self.prev_move = ''
@@ -126,16 +126,17 @@ class Player:
             return rnd.choice(key)
                 
 
-    def play(self, player2, i, n):   # play N games
+    def play(self, player2, i, n):   # play n games
         
         '''
-        Function which simulates 'games' between self and 'player2'
+        Function which simulates games between self and 'player2'
 
         Argument 'i' represents what relative player is being played moving in
         a clockwise direction starting with "R". Where 'i' = 0 represents
         the player on the right of self.
         '''
         
+        score = 0
         for p in range(n):
             p1_move = self.choose_move(p)
             p2_move = player2.choose_move(p)
@@ -150,6 +151,13 @@ class Player:
             self.prev_res = res[0]
             player2.prev_move = p2_move
             player2.prev_res = res[1]
+            
+            if res[0] == 'W':
+                score += 1
+            elif res[0] == 'L':
+                score -= 1
+                
+        self.points[i] = score/n
             
             
     def change_strategy(self, strategy):
@@ -226,21 +234,7 @@ class Simulation:
         for i in range(self.N):
             for j in range(self.N):
                 player = self.grid[i][j]    # cycle through all players
-                player.points = []          # initialise to empty list
-                for k in range(8):
-                    res = player.results[k]   # cycle through 8 opponents
-                    
-                    score = 0
-                    for i in range(self.n):
-                        if res[i] == 'W':
-                            score += 1
-                        elif res[i] == 'L':
-                            score -= 1
-                        elif res[i] == 'D':
-                            score = score
-                    score = score / self.n
-                    player.points.append(score)
-                
+
                 # if player's average points are < 0, change strategy
                 if np.mean(player.points) < 0:
                     temp_strats = deepcopy(strats)
