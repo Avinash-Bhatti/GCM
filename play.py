@@ -277,7 +277,8 @@ class Simulation:
         # plotting
         fig = plt.figure()
         fig.add_axes([0.1, 0.11, 0.6, 0.8])
-        im = plt.imshow(self.Z[0], aspect='equal', origin='lower')
+        im = plt.imshow(self.Z[0], aspect='equal', origin='lower', \
+                                                        vmin=0, vmax=5)
         plot_strats = ["Always Rock", "Always Paper", "Always Scissors",
                            "Human", "Anti-human", "Random"]
         vals = np.arange(0, len(plot_strats))
