@@ -241,8 +241,8 @@ class Simulation:
                 player = self.grid[i][j]    # cycle through all players
                 
                 score = 0
-                for i in range(8):
-                    res = player.res[i]
+                for k in range(8):
+                    res = player.res[k]
                     if res == 'W':
                         score += 1
                     elif res == 'L':
