@@ -58,15 +58,13 @@ class Player:
         self.strat = strategy   # strategy of player
         self.loc = location   # location of player
         
-        # lists to store players previous results and moves
-        # Note: we play games starting from R, and proceeding clockwise
-        #       i.e. R, DR, D, DL, L, UL, U, UR, 
-        # Note: we store the results and moves played in arrays, with 8 rows,
-        #       and n columns, where the rows denote sets of games against a
-        #       single player, so row 0 = vs R, row 1 = vs DR, etc...
+        # lists to store players previous results, moves, and scores vs all 8
+        # players
         self.results = np.empty((8, n), dtype='str')
         self.moves = np.empty((8, n), dtype='str')
+        self.scores = np.zeros(8)
         
+        # list to store general result against each player
         self.res = np.empty(8, dtype='str')   # array to store results
         
         # Variables to store last move chosen by player
@@ -157,6 +155,7 @@ class Player:
             elif res[0] == 'L':
                 score -= 1
         
+        self.scores[i] = score   # store the score
         if score > 0:
             self.res[i] = 'W'
         elif score < 0:
@@ -184,8 +183,8 @@ class Simulation:
     def __init__(self, N, n):
         
         self.grid = []
-        self.N = N
-        self.n = n
+        self.N = N   # N players in each dimension
+        self.n = n   # n games played per clock tick
         
         # Create N x N grid of Player objects
         for i in range(N):
@@ -196,8 +195,14 @@ class Simulation:
             
         self.grid = np.array(self.grid)
         
+        self.clockTicks = 0   # count the number of clock ticks
         
-        self.Z = []   # list to store strats for plotting
+        # list to store strats for imshow
+        self.Z = []
+        # list to store population of strats for plotting
+        self.strats = []
+        for i in range(6):
+            self.strats.append([])
         
         
     def storeStrats(self):
@@ -211,12 +216,23 @@ class Simulation:
         for i in range(self.N):
             l.append([])
             
-        # add the strats index for plotting
+        # storing the strat via index for imshow
         for j in range(self.N):
             for i in range(self.N):
                 l[j].append(strats.index(self.grid[i][j].strat))   
         self.Z.append(l)
         
+        # store the population of strats
+        all_strats = []
+        for x in range(self.N):
+            for y in range(self.N):
+                player = self.grid[x][y]
+                all_strats.append(player.strat)
+        all_strats = np.array(all_strats)
+        count = ([np.count_nonzero(all_strats==i) for i in strats])
+        for i in range(6):
+            self.strats[i].append(count[i])
+
 
     def clock_tick(self):
         
@@ -236,7 +252,8 @@ class Simulation:
                 player.play(self.grid[(i-1)%self.N][(j+1)%self.N], 5, self.n)
                 player.play(self.grid[i][(j+1)%self.N], 6, self.n)
                 player.play(self.grid[(i+1)%self.N][(j+1)%self.N], 7, self.n)
-                
+        
+        self.clockTicks += 1
 
     def changeAllStrategies(self):
         
@@ -258,12 +275,31 @@ class Simulation:
                         
                 # if score < 0, change strategy
                 if score < 0:
-                    temp_strats = deepcopy(strats)
-                    temp_strats.remove(player.strat)
-                    player.change_strategy(rnd.choice(temp_strats))
+                    ind=np.where(player.scores==np.amin(player.scores))[0][0]
+                    new_strat = ''
+                    if ind == 0:
+                        new_strat=self.grid[(i+1)%self.N][j].strat
+                    elif ind == 1:
+                        new_strat=self.grid[(i+1)%self.N][(j-1)%self.N].strat
+                    elif ind == 2:
+                        new_strat=self.grid[i][(j-1)%self.N].strat
+                    elif ind == 3:
+                        new_strat=self.grid[(i-1)%self.N][(j-1)%self.N].strat
+                    elif ind == 4:
+                        new_strat=self.grid[(i-1)%self.N][j].strat
+                    elif ind == 5:
+                        new_strat=self.grid[(i-1)%self.N][(j+1)%self.N].strat
+                    elif ind == 6:
+                        new_strat=self.grid[i][(j+1)%self.N].strat
+                    elif ind == 7:
+                        new_strat=self.grid[(i+1)%self.N][(j+1)%self.N].strat
+                    
+                    player.change_strategy(new_strat)
 
         # store strats for plotting
         self.storeStrats()
+        
+
                     
     
     def play(self, t):
@@ -279,8 +315,8 @@ class Simulation:
             self.changeAllStrategies()
         
         # plotting
-        fig = plt.figure()
-        fig.add_axes([0.1, 0.11, 0.6, 0.8])
+        fig1 = plt.figure(1)
+        fig1.add_axes([0.1, 0.11, 0.6, 0.8])
         im = plt.imshow(self.Z[0], aspect='equal', origin='lower', \
                                                         vmin=0, vmax=5)
         plot_strats = ["Always Rock", "Always Paper", "Always Scissors",
@@ -301,12 +337,39 @@ class Simulation:
             im.set_array(self.Z[i])
             return [im]
 
-        anim = animation.FuncAnimation(fig, animate_func, frames=len(self.Z),\
+        ani1 = animation.FuncAnimation(fig1,animate_func,frames=len(self.Z),\
                                        interval=500, repeat=False, blit=True)
-        anim.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,t),writer='ffmpeg')
+        ani1.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,t),writer='ffmpeg')
+        
+        #####
+        
+        x = np.arange(0, t+1, 1)
+        y = self.strats
+        
+        fig2, ax2 = plt.subplots()
+        line1, = ax2.plot(x[:1], y[0][:1], label='Always Rock')
+        line2, = ax2.plot(x[:1], y[1][:1], label='Always Paper')
+        ax2.set(xlabel='Clock ticks', ylabel='Population', \
+                xlim=(-1, t+1), xticks=np.arange(0, t+1, 1), \
+                    ylim=(-5, (self.N**2)+5), \
+                    title='Population variation with clock ticks')
+        ax2.grid()
+        ax2.legend(loc='upper right')
+        
+        def update(i, x, y, line1, line2):
+            line1.set_data(x[:i+1], y[0][:i+1])
+            line2.set_data(x[:i+1], y[1][:i+1])
+            return [line1, line2]
+
+        ani2 = animation.FuncAnimation(fig2, update, frames=len(self.Z), \
+               fargs = [x, y, line1, line2], \
+                   interval=250, repeat=False, blit=True)
+        ani2.save('{}x{}_{}ticksPopulation.mp4'\
+                  .format(self.N,self.N,t),writer='ffmpeg')
+        
         
         cd = os.getcwd()
-        print("MP4 file saved in {}".format(cd))
+        print("MP4 files saved in {}".format(cd))
         
         plt.show()
 
@@ -314,5 +377,9 @@ class Simulation:
 ##############################################################################
 
 sim = Simulation(20, 10)
-sim.play(100)
+for x in range(20):
+    for y in range(20):
+        sim.grid[x][y].change_strategy('always_rock')
+sim.grid[2][2].change_strategy('always_paper')
+sim.play(20)
 
