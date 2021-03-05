@@ -304,7 +304,7 @@ class Simulation:
 
         # store strats for plotting
         self.storeStrats()
-        
+        '''
         # random change of strat
         if self.clockTicks != cutoff:
             if rnd.randint(1, 100) == 1:
@@ -327,7 +327,7 @@ class Simulation:
                 self.log.append('Player at coordinate ({}, {}) randomly '
                          'changed strategy from {} to {} at {} clock ticks.'\
                    .format(x, y, old_strat, new_strat, self.clockTickLog[-2]))
-                    
+        ''' 
     
     def play(self, t):
         
