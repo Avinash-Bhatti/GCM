@@ -3,7 +3,8 @@ from numpy.fft import fft, fftfreq
 import matplotlib.pyplot as plt
 from scipy.signal import correlate
 
-data = np.load('30x30_500ticksStrats.npy')
+
+data = np.load('30x30_500ticksStrats(1).npy')
 AR = data[0]
 AP = data[1]
 AS = data[2]
@@ -17,12 +18,14 @@ ax1.set(xlabel='Clock tick (t)', ylabel='Population')
 plt.legend(loc='upper right')
 plt.show()
 
-n = len(t[201:])
+cutoff = 301
+
+n = len(t[cutoff:])
 freqs = fftfreq(n)
 mask = freqs > 0
-ARfft = 2*np.abs(fft(AR[201:]) / n)
-APfft = 2*np.abs(fft(AP[201:]) / n)
-ASfft = 2*np.abs(fft(AS[201:]) / n)
+ARfft = 2*np.abs(fft(AR[cutoff:]) / n)
+APfft = 2*np.abs(fft(AP[cutoff:]) / n)
+ASfft = 2*np.abs(fft(AS[cutoff:]) / n)
 
 fig2, ax2 = plt.subplots()
 ax2.plot(freqs[mask], ARfft[mask], label='Always Rock - FFT')
@@ -34,18 +37,16 @@ plt.legend(loc='upper right')
 plt.show()
 
 
-#%%
-
-n = len(t[201:])
-AR = AR[201:]
+n = len(t[cutoff:])
+AR = AR[cutoff:]
 AR = AR - np.mean(AR)
 AR = AR / np.std(AR)
 
-AP = AP[201:]
+AP = AP[cutoff:]
 AP = AP - np.mean(AP)
 AP = AP / np.std(AP)
 
-AS = AS[201:]
+AS = AS[cutoff:]
 AS = AS - np.mean(AS)
 AS = AS / np.std(AS)
 
@@ -60,5 +61,16 @@ RPtime_shift = dt[RP_corr.argmax()]
 RStime_shift = dt[RS_corr.argmax()]
 PStime_shift = dt[PS_corr.argmax()]
 
+#%%
 
+x = np.arange(0, 2*np.pi, np.pi/64)
+S1 = np.sin(x)
+S2 = np.sin(x + (np.pi/4))
+
+plt.plot(x, S1)
+plt.plot(x, S2)
+plt.show()
+
+n = len(x)
+corr = np.correlate(S1, S2, 'full')
 

@@ -7,8 +7,8 @@ import matplotlib.animation as animation
 import os
 
 # Set random seeds so that any randomness is reproducible
-rnd.seed(0)
-np.random.seed(0)
+rnd.seed(1)
+np.random.seed(1)
 
 
 key = ["R", "P", "S"]
@@ -343,13 +343,13 @@ class Simulation:
             self.clock_tick()
             self.changeAllStrategies(cutoff=t)
             
-        f = open('{}x{}_{}ticksLog.txt'.format(self.N, self.N, t), 'w')
+        f = open('{}x{}_{}ticksLog(2).txt'.format(self.N, self.N, t), 'w')
         for i in self.log:
             f.write(i)
             f.write('\n')
         f.close()
         
-        np.save('{}x{}_{}ticksStrats'.format(self.N, self.N, t), self.strats)
+        np.save('{}x{}_{}ticksStrats(2)'.format(self.N, self.N, t), self.strats)
         
         # plotting
         fig1 = plt.figure(1)
@@ -380,7 +380,7 @@ class Simulation:
 
         ani1 = animation.FuncAnimation(fig1, animate_func, \
                 frames=len(self.Z), interval=750, repeat=False, blit=True)
-        ani1.save('{}x{}_{}ticks.mp4'.format(self.N,self.N,t), \
+        ani1.save('{}x{}_{}ticks(2).mp4'.format(self.N,self.N,t), \
                   writer='ffmpeg', bitrate=4000)
         
         #####
@@ -412,7 +412,7 @@ class Simulation:
         ani2 = animation.FuncAnimation(fig2, update, frames=len(self.Z), \
                fargs = [x, y, line1, line2, line3, CT2], \
                    interval=100, repeat=False, blit=True)
-        ani2.save('{}x{}_{}ticksPopulation.mp4'.format(self.N, self.N, t), \
+        ani2.save('{}x{}_{}ticksPopulation(2).mp4'.format(self.N, self.N, t), \
                   writer='ffmpeg', bitrate=4000)
         
         
