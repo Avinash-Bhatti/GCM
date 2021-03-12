@@ -7,8 +7,8 @@ import matplotlib.animation as animation
 import os
 
 # Set random seeds so that any randomness is reproducible
-rnd.seed(1)
-np.random.seed(1)
+rnd.seed(0)
+np.random.seed(0)
 
 
 key = ["R", "P", "S"]
@@ -304,7 +304,7 @@ class Simulation:
 
         # store strats for plotting
         self.storeStrats()
-        '''
+        
         # random change of strat
         if self.clockTicks != cutoff:
             if rnd.randint(1, 100) == 1:
@@ -327,7 +327,7 @@ class Simulation:
                 self.log.append('Player at coordinate ({}, {}) randomly '
                          'changed strategy from {} to {} at {} clock ticks.'\
                    .format(x, y, old_strat, new_strat, self.clockTickLog[-2]))
-        ''' 
+         
     
     def play(self, t):
         
@@ -343,13 +343,13 @@ class Simulation:
             self.clock_tick()
             self.changeAllStrategies(cutoff=t)
             
-        f = open('{}x{}_{}ticksLog(2).txt'.format(self.N, self.N, t), 'w')
+        f = open('(1)_{}x{}_{}ticksLog_1%.txt'.format(self.N, self.N, t), 'w')
         for i in self.log:
             f.write(i)
             f.write('\n')
         f.close()
         
-        np.save('{}x{}_{}ticksStrats(2)'.format(self.N, self.N, t), self.strats)
+        np.save('(1)_{}x{}_{}ticksStrats_1%'.format(self.N, self.N, t), self.strats)
         
         # plotting
         fig1 = plt.figure(1)
@@ -380,7 +380,7 @@ class Simulation:
 
         ani1 = animation.FuncAnimation(fig1, animate_func, \
                 frames=len(self.Z), interval=750, repeat=False, blit=True)
-        ani1.save('{}x{}_{}ticks(2).mp4'.format(self.N,self.N,t), \
+        ani1.save('(1)_{}x{}_{}ticks_1%.mp4'.format(self.N,self.N,t), \
                   writer='ffmpeg', bitrate=4000)
         
         #####
@@ -412,7 +412,7 @@ class Simulation:
         ani2 = animation.FuncAnimation(fig2, update, frames=len(self.Z), \
                fargs = [x, y, line1, line2, line3, CT2], \
                    interval=100, repeat=False, blit=True)
-        ani2.save('{}x{}_{}ticksPopulation(2).mp4'.format(self.N, self.N, t), \
+        ani2.save('(1)_{}x{}_{}ticksPopulation_1%.mp4'.format(self.N, self.N, t), \
                   writer='ffmpeg', bitrate=4000)
         
         

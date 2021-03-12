@@ -1,0 +1,3 @@
+Player at coordinate (26, 16) randomly changed strategy from always_rock to always_scissors at 3 clock ticks.
+Player at coordinate (1, 25) randomly changed strategy from always_paper to always_scissors at 374 clock ticks.
+Player at coordinate (27, 12) randomly changed strategy from always_scissors to always_rock at 440 clock ticks.
