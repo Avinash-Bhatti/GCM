@@ -7,8 +7,8 @@ import matplotlib.animation as animation
 import os
 
 # Set random seeds so that any randomness is reproducible
-rnd.seed(0)
-np.random.seed(0)
+rnd.seed(11)
+np.random.seed(11)
 
 
 key = ["R", "P", "S"]
@@ -171,8 +171,17 @@ class Player:
         '''
         
         self.strat = strategy
-
+        
+    
+    def change_coord(self, x, y):
+        
+        '''
+        Change the cooridante of a Player object
+        '''
+        
+        self.loc = [x, y]
           
+
 
 class Simulation:
     
@@ -261,7 +270,7 @@ class Simulation:
         
         self.clockTicks += 1
 
-    def changeAllStrategies(self, cutoff):
+    def changeAllStrategies(self, end):
         
         '''
         Change all strategies of players based on points
@@ -305,8 +314,9 @@ class Simulation:
         # store strats for plotting
         self.storeStrats()
         
+        '''
         # random change of strat
-        if self.clockTicks != cutoff:
+        if self.clockTicks != end:
             if rnd.randint(1, 100) == 1:
                 x = rnd.randint(0, self.N-1)
                 y = rnd.randint(0, self.N-1)
@@ -314,21 +324,61 @@ class Simulation:
                 old_strat = player.strat
                 options = ['always_rock', 'always_paper', 'always_scissors']
                 options.remove(old_strat)
-                player.change_strategy(rnd.choice(options))
+                st = rnd.choice(options)
+                player.change_strategy(st)
+                self.grid[(x+1)%self.N][y].change_strategy(st)
+                self.grid[(x+1)%self.N][(y-1)%self.N].change_strategy(st)
+                self.grid[x][(y-1)%self.N].change_strategy(st)
+                self.grid[(x-1)%self.N][(y-1)%self.N].change_strategy(st)
+                self.grid[(x-1)%self.N][y].change_strategy(st)
+                self.grid[(x-1)%self.N][(y+1)%self.N].change_strategy(st)
+                self.grid[x][(y+1)%self.N].change_strategy(st)
+                self.grid[(x+1)%self.N][(y+1)%self.N].change_strategy(st)
                 new_strat = player.strat
+                
                 self.storeStrats()
                 del self.clockTickLog[-1]
                 self.clockTickLog.append('{} - Random change at ({}, {})'\
                         .format(self.clockTickLog[-1], x, y))
                 
-                print('Player at coordinate ({}, {}) randomly changed '
-                      'strategy from {} to {} at {} clock ticks.'\
+                print('Players centred at coordinate ({}, {}) randomly '
+                      'changed strategy from {} to {} at {} clock ticks.'\
                    .format(x, y, old_strat, new_strat, self.clockTickLog[-2]))
-                self.log.append('Player at coordinate ({}, {}) randomly '
-                         'changed strategy from {} to {} at {} clock ticks.'\
+                self.log.append('Players centred at coordinate ({}, {}) '
+                 'randomly changed strategy from {} to {} at {} clock ticks.'\
                    .format(x, y, old_strat, new_strat, self.clockTickLog[-2]))
-         
-    
+        ''' 
+        
+        if self.clockTicks != end and self.clockTicks % 25 == 0:
+            for i in range(int(self.N/2)):
+                for j in range(int(self.N/2)):
+                        player = self.grid[i][j]
+                        temp_BR = self.grid[i+(int(self.N/2))][j]
+                        self.grid[i+(int(self.N/2))][j] = player
+                        self.grid[i+(int(self.N/2))][j].\
+                                          change_coord(i+(int(self.N/2)), j)
+                        
+                        temp_TR = \
+                            self.grid[i+(int(self.N/2))][j+(int(self.N/2))]
+                        self.grid[i+(int(self.N/2))][j+(int(self.N/2))] = \
+                                                                      temp_BR
+                        self.grid[i+(int(self.N/2))][j+(int(self.N/2))].\
+                            change_coord(i+(int(self.N/2)), j+(int(self.N/2)))
+                        
+                        temp_TL = self.grid[i][j+(int(self.N/2))]
+                        self.grid[i][j+(int(self.N/2))] = temp_TR
+                        self.grid[i][j+(int(self.N/2))].\
+                                            change_coord(i, j+(int(self.N/2)))
+                        
+                        self.grid[i][j] = temp_TL
+                        self.grid[i][j].change_coord(i, j)
+            
+            self.storeStrats()
+            del self.clockTickLog[-1]
+            self.clockTickLog.append('{} - Quarter rotation'\
+                                     .format(self.clockTickLog[-1]))
+            
+                
     def play(self, t):
         
         '''
@@ -341,15 +391,16 @@ class Simulation:
         
         for i in range(t):
             self.clock_tick()
-            self.changeAllStrategies(cutoff=t)
-            
-        f = open('(1)_{}x{}_{}ticksLog_1%.txt'.format(self.N, self.N, t), 'w')
+            self.changeAllStrategies(end=t)
+        '''    
+        f = open('(1)_{}x{}_{}ticksLog.txt'.format(self.N, self.N, t), 'w')
         for i in self.log:
             f.write(i)
             f.write('\n')
         f.close()
-        
-        np.save('(1)_{}x{}_{}ticksStrats_1%'.format(self.N, self.N, t), self.strats)
+        '''
+        np.save('(1)_{}x{}_{}ticksStrats'\
+                .format(self.N, self.N, t), self.strats)
         
         # plotting
         fig1 = plt.figure(1)
@@ -380,7 +431,7 @@ class Simulation:
 
         ani1 = animation.FuncAnimation(fig1, animate_func, \
                 frames=len(self.Z), interval=750, repeat=False, blit=True)
-        ani1.save('(1)_{}x{}_{}ticks_1%.mp4'.format(self.N,self.N,t), \
+        ani1.save('(1)_{}x{}_{}ticks.mp4'.format(self.N,self.N,t), \
                   writer='ffmpeg', bitrate=4000)
         
         #####
@@ -412,8 +463,8 @@ class Simulation:
         ani2 = animation.FuncAnimation(fig2, update, frames=len(self.Z), \
                fargs = [x, y, line1, line2, line3, CT2], \
                    interval=100, repeat=False, blit=True)
-        ani2.save('(1)_{}x{}_{}ticksPopulation_1%.mp4'.format(self.N, self.N, t), \
-                  writer='ffmpeg', bitrate=4000)
+        ani2.save('(1)_{}x{}_{}ticksPopulation.mp4'\
+                  .format(self.N, self.N, t), writer='ffmpeg', bitrate=4000)
         
         
         cd = os.getcwd()
@@ -431,7 +482,7 @@ for x in range(N):
         sim.grid[x][y].change_strategy(rnd.choice(['always_rock', \
                                         'always_paper', 'always_scissors']))
         
-sim.play(500)
+sim.play(100)
 
 
 ##############################################################################
