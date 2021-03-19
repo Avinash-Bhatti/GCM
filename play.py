@@ -7,8 +7,8 @@ import matplotlib.animation as animation
 import os
 
 # Set random seeds so that any randomness is reproducible
-rnd.seed(11)
-np.random.seed(11)
+rnd.seed(12)
+np.random.seed(12)
 
 
 key = ["R", "P", "S"]
@@ -349,7 +349,7 @@ class Simulation:
                    .format(x, y, old_strat, new_strat, self.clockTickLog[-2]))
         ''' 
         
-        if self.clockTicks != end and self.clockTicks % 25 == 0:
+        if self.clockTicks != end and self.clockTicks % 250 == 0:
             for i in range(int(self.N/2)):
                 for j in range(int(self.N/2)):
                         player = self.grid[i][j]
@@ -393,13 +393,13 @@ class Simulation:
             self.clock_tick()
             self.changeAllStrategies(end=t)
         '''    
-        f = open('(1)_{}x{}_{}ticksLog.txt'.format(self.N, self.N, t), 'w')
+        f = open('(2)_{}x{}_{}ticksLog.txt'.format(self.N, self.N, t), 'w')
         for i in self.log:
             f.write(i)
             f.write('\n')
         f.close()
         '''
-        np.save('(1)_{}x{}_{}ticksStrats'\
+        np.save('(2)_{}x{}_{}ticksStrats'\
                 .format(self.N, self.N, t), self.strats)
         
         # plotting
@@ -431,11 +431,11 @@ class Simulation:
 
         ani1 = animation.FuncAnimation(fig1, animate_func, \
                 frames=len(self.Z), interval=750, repeat=False, blit=True)
-        ani1.save('(1)_{}x{}_{}ticks.mp4'.format(self.N,self.N,t), \
+        ani1.save('(2)_{}x{}_{}ticks.mp4'.format(self.N,self.N,t), \
                   writer='ffmpeg', bitrate=4000)
         
         #####
-        
+        '''
         x = np.arange(len(self.strats[0]))
         y = self.strats
         
@@ -463,9 +463,9 @@ class Simulation:
         ani2 = animation.FuncAnimation(fig2, update, frames=len(self.Z), \
                fargs = [x, y, line1, line2, line3, CT2], \
                    interval=100, repeat=False, blit=True)
-        ani2.save('(1)_{}x{}_{}ticksPopulation.mp4'\
+        ani2.save('(2)_{}x{}_{}ticksPopulation.mp4'\
                   .format(self.N, self.N, t), writer='ffmpeg', bitrate=4000)
-        
+        '''
         
         cd = os.getcwd()
         print("Files saved in {}".format(cd))
@@ -482,7 +482,7 @@ for x in range(N):
         sim.grid[x][y].change_strategy(rnd.choice(['always_rock', \
                                         'always_paper', 'always_scissors']))
         
-sim.play(100)
+sim.play(1000)
 
 
 ##############################################################################
